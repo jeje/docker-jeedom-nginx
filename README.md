@@ -1,4 +1,5 @@
-# docker-jeedom-nginx
-Docker image for Jeedom on Nginx
+# Docker container for Jeedom using Nginx instead of Apache
 
-This is heavily based on the official Jeedom installation documentation with Nginx.
+Docker image for Jeedom using Nginx instead of Apache.
+
+This is heavily based on the official Jeedom installation documentation with Nginx and the official Jeedom container using Apache.
