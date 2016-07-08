@@ -37,6 +37,7 @@ echo 'Launch cron'
 service cron start
 
 echo 'Launch nginx'
+service apache2 stop
 service nginx start
 
 /usr/bin/supervisord

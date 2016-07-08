@@ -87,6 +87,11 @@ RUN echo "upload_max_filesize = 1G" >> /usr/local/etc/php/conf.d/jeedom.ini
 RUN echo "post_max_size = 1G" >> /usr/local/etc/php/conf.d/jeedom.ini
 RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/jeedom.ini
 
+# Install Redis extension for PHP
+RUN pecl install -o -f redis \
+&&  rm -rf /tmp/pear \
+&&  echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini
+
 
 ################################################################### JEEDOM ########################################
 

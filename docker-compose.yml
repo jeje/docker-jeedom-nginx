@@ -1,0 +1,36 @@
+version: '2'
+
+services:
+
+  jeedom-nginx:
+    container_name: jeedom-web
+    image: jeje/jeedom-nginx
+    ports:
+     - "9080:80"
+     - "9022:22"
+    volumes:
+     - ./data/jeedom:/var/www/html
+    depends_on:
+     - db
+     - cache
+    #devices:
+    # - "/dev/ttyACM0:/dev/ttyACM0"
+    # - "/dev/ttyACM1:/dev/ttyACM1"
+    environment:
+     - ROOT_PASSWORD
+    mac_address: ${MAC_ADDRESS}
+    restart: always
+
+  db:
+    container_name: jeedom-db
+    image: mariadb
+    volumes:
+     - ./data/mysql:/var/lib/mysql
+    environment:
+     MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+    restart: always
+
+  cache:
+    container_name: jeedom-cache
+    image: redis:alpine
+    restart: always
