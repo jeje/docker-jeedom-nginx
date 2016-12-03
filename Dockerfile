@@ -47,17 +47,6 @@ nginx-common \
 nginx-full
 
 
-################################################################### NGINX #########################################
-
-RUN mkdir -p /var/www/html/log
-RUN rm /etc/nginx/sites-available/default
-RUN rm /etc/nginx/sites-enabled/default
-RUN wget https://raw.githubusercontent.com/jeedom/core/stable/install/nginx_default -O /etc/nginx/sites-available/default
-RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-RUN touch /etc/nginx/sites-available/jeedom_dynamic_rule
-RUN ln -s /etc/nginx/sites-available/jeedom_dynamic_rule /etc/nginx/sites-enabled/jeedom_dynamic_rule
-RUN sed -i 's/unix:\/var\/run\/php5-fpm.sock/localhost:9000/g' /etc/nginx/sites-enabled/default
-
 
 ################################################################### PHP7 ##########################################
 
@@ -87,10 +76,10 @@ RUN echo "upload_max_filesize = 1G" >> /usr/local/etc/php/conf.d/jeedom.ini
 RUN echo "post_max_size = 1G" >> /usr/local/etc/php/conf.d/jeedom.ini
 RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/jeedom.ini
 
-# Install Redis extension for PHP
-RUN pecl install -o -f redis \
-&&  rm -rf /tmp/pear \
-&&  echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini
+# Install Redis extension for PHP 
+RUN pecl install -o -f redis \ 
+  &&  rm -rf /tmp/pear \ 
+  &&  echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini
 
 
 ################################################################### JEEDOM ########################################
@@ -103,6 +92,18 @@ RUN cp -R /root/core-*/* /var/www/html/
 RUN cp -R /root/core-*/.htaccess /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
+
+################################################################### NGINX #########################################
+
+RUN mkdir -p /var/www/html/log
+RUN rm /etc/nginx/sites-available/default
+RUN rm /etc/nginx/sites-enabled/default
+RUN wget https://raw.githubusercontent.com/jeedom/core/stable/install/nginx_default -O /etc/nginx/sites-available/default
+RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+RUN touch /etc/nginx/sites-available/jeedom_dynamic_rule
+RUN ln -s /etc/nginx/sites-available/jeedom_dynamic_rule /etc/nginx/sites-enabled/jeedom_dynamic_rule
+RUN sed -i 's/usr\/share\/nginx\/www\/jeedom/var\/www\/html/g' /etc/nginx/sites-enabled/default
+RUN sed -i 's/unix:\/var\/run\/php5-fpm.sock/localhost:9000/g' /etc/nginx/sites-enabled/default
 
 ################################################################### SYSTEM ########################################
 
@@ -121,6 +122,33 @@ ADD init.sh /root/init.sh
 RUN chmod +x /root/init.sh
 RUN mkdir -p /tmp/jeedom-cache
 RUN chown -R www-data:www-data /tmp/jeedom-cache
+
+################################################################### MQTT ##########################################
+
+RUN wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+RUN apt-key add mosquitto-repo.gpg.key
+#  cd /etc/apt/sources.list.d/
+#  if [ `lsb_release -c -s` == "jessie" ]; then
+#    wget http://repo.mosquitto.org/debian/mosquitto-jessie.list
+#    rm /etc/apt/sources.list.d/mosquitto-jessie.list
+#    cp -r mosquitto-jessie.list /etc/apt/sources.list.d/mosquitto-jessie.list
+#  fi
+
+RUN apt-get update && apt-get install -y \
+  mosquitto mosquitto-clients libmosquitto-dev \
+  php5-dev
+
+WORKDIR /tmp
+RUN git clone https://github.com/mgdm/Mosquitto-PHP.git
+WORKDIR /tmp/Mosquitto-PHP
+RUN phpize
+RUN ./configure --with-mosquitto=/usr/lib
+RUN make
+RUN make install
+WORKDIR /var/www/html
+
+################################################################### START ########################################
+
 CMD ["/root/init.sh"]
 
 EXPOSE 22 80 162 1886 4025 17100 10000
